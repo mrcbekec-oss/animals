@@ -84,6 +84,13 @@ let isFighting = false;
 let f1CurrentHp = 0;
 let f2CurrentHp = 0;
 
+// Tournament state
+let currentMode = 'classic'; // 'classic' or 'tournament'
+let tournamentOpponents = [];
+let tournamentCurrentIndex = 0;
+let tournamentWins = 0;
+let tournamentLosses = 0;
+
 const DOM = {
     rosterGrid: document.getElementById('roster-grid'),
     btnSelectP1: document.getElementById('select-p1-btn'),
@@ -102,7 +109,16 @@ const DOM = {
     f2Health: document.getElementById('fighter2-health'),
     
     logList: document.getElementById('log-list'),
-    battleLog: document.getElementById('battle-log')
+    battleLog: document.getElementById('battle-log'),
+
+    // Mode elements
+    modeClassicBtn: document.getElementById('mode-classic-btn'),
+    modeTournamentBtn: document.getElementById('mode-tournament-btn'),
+    tournamentStatus: document.getElementById('tournament-status'),
+    tourneyProgress: document.getElementById('tourney-progress'),
+    tourneyWins: document.getElementById('tourney-wins'),
+    tourneyLosses: document.getElementById('tourney-losses'),
+    tourneyProgressBar: document.getElementById('tourney-progress-bar')
 };
 
 function init() {
@@ -126,33 +142,115 @@ function renderRoster() {
 
 function setupEventListeners() {
     DOM.btnSelectP1.addEventListener('click', () => {
+        if (currentMode === 'tournament') return;
         selectingPlayer = 1;
         DOM.btnSelectP1.classList.add('active');
         DOM.btnSelectP2.classList.remove('active');
     });
 
     DOM.btnSelectP2.addEventListener('click', () => {
+        if (currentMode === 'tournament') return;
         selectingPlayer = 2;
         DOM.btnSelectP2.classList.add('active');
         DOM.btnSelectP1.classList.remove('active');
     });
 
     DOM.btnRandom.addEventListener('click', () => {
-        const r1 = Math.floor(Math.random() * animals.length);
-        const r2 = Math.floor(Math.random() * animals.length);
-        
-        selectingPlayer = 1;
-        selectAnimal(r1, DOM.rosterGrid.children[r1]);
-        
-        selectingPlayer = 2;
-        selectAnimal(r2, DOM.rosterGrid.children[r2]);
-        
+        if (isFighting) return;
+        if (currentMode === 'classic') {
+            const r1 = Math.floor(Math.random() * animals.length);
+            const r2 = Math.floor(Math.random() * animals.length);
+            
+            selectingPlayer = 1;
+            selectAnimal(r1, DOM.rosterGrid.children[r1]);
+            
+            selectingPlayer = 2;
+            selectAnimal(r2, DOM.rosterGrid.children[r2]);
+            
+            selectingPlayer = 1;
+            DOM.btnSelectP1.classList.add('active');
+            DOM.btnSelectP2.classList.remove('active');
+        } else {
+            // Tournament mode: random select for player 1 only
+            const r1 = Math.floor(Math.random() * animals.length);
+            selectingPlayer = 1;
+            selectAnimal(r1, DOM.rosterGrid.children[r1]);
+        }
+    });
+
+    DOM.btnFight.addEventListener('click', () => {
+        if (currentMode === 'classic') {
+            startFight();
+        } else {
+            startTournament();
+        }
+    });
+
+    // Mode Selector listeners
+    DOM.modeClassicBtn.addEventListener('click', () => {
+        if (isFighting) return;
+        switchMode('classic');
+    });
+
+    DOM.modeTournamentBtn.addEventListener('click', () => {
+        if (isFighting) return;
+        switchMode('tournament');
+    });
+}
+
+function switchMode(mode) {
+    currentMode = mode;
+    
+    // Clear selections
+    fighter1 = null;
+    fighter2 = null;
+    f1CurrentHp = 0;
+    f2CurrentHp = 0;
+    
+    // Reset selection styles in grid
+    Array.from(DOM.rosterGrid.children).forEach(child => {
+        child.classList.remove('selected-1', 'selected-2');
+    });
+
+    // Reset cards to default
+    DOM.f1Emoji.textContent = '❓';
+    DOM.f1Name.textContent = 'Hayvan 1 Seçin';
+    DOM.f1Stats.innerHTML = '<span>⚔️ Saldırı: ?</span> <span>🛡️ Savunma: ?</span> <span>⚡ Hız: ?</span>';
+    DOM.f1Health.style.width = '0%';
+    
+    DOM.f2Emoji.textContent = '❓';
+    DOM.f2Name.textContent = 'Hayvan 2 Seçin';
+    DOM.f2Stats.innerHTML = '<span>⚔️ Saldırı: ?</span> <span>🛡️ Savunma: ?</span> <span>⚡ Hız: ?</span>';
+    DOM.f2Health.style.width = '0%';
+
+    DOM.btnFight.disabled = true;
+    DOM.btnFight.textContent = "SAVAŞI BAŞLAT";
+    DOM.logList.innerHTML = '<li>Savaşın başlaması bekleniyor...</li>';
+
+    if (mode === 'classic') {
+        DOM.modeClassicBtn.classList.add('active');
+        DOM.modeTournamentBtn.classList.remove('active');
+        DOM.tournamentStatus.classList.add('hidden');
+        DOM.btnSelectP2.classList.remove('hidden');
         selectingPlayer = 1;
         DOM.btnSelectP1.classList.add('active');
         DOM.btnSelectP2.classList.remove('active');
-    });
-
-    DOM.btnFight.addEventListener('click', startFight);
+        DOM.btnSelectP1.textContent = "Oyuncu 1 İçin Seç";
+    } else {
+        DOM.modeTournamentBtn.classList.add('active');
+        DOM.modeClassicBtn.classList.remove('active');
+        DOM.tournamentStatus.classList.remove('hidden');
+        DOM.btnSelectP2.classList.add('hidden');
+        selectingPlayer = 1;
+        DOM.btnSelectP1.classList.add('active');
+        DOM.btnSelectP1.textContent = "Hayvanını Seç";
+        
+        // Update status UI
+        DOM.tourneyProgress.textContent = "0 / 25";
+        DOM.tourneyWins.textContent = "0";
+        DOM.tourneyLosses.textContent = "0";
+        DOM.tourneyProgressBar.style.width = "0%";
+    }
 }
 
 function selectAnimal(index, element) {
@@ -160,25 +258,63 @@ function selectAnimal(index, element) {
 
     const animal = animals[index];
     
-    // Clear previous selection styling
-    Array.from(DOM.rosterGrid.children).forEach(child => {
-        if (selectingPlayer === 1) child.classList.remove('selected-1');
-        if (selectingPlayer === 2) child.classList.remove('selected-2');
-    });
+    if (currentMode === 'classic') {
+        // Clear previous selection styling
+        Array.from(DOM.rosterGrid.children).forEach(child => {
+            if (selectingPlayer === 1) child.classList.remove('selected-1');
+            if (selectingPlayer === 2) child.classList.remove('selected-2');
+        });
 
-    element.classList.add(`selected-${selectingPlayer}`);
+        element.classList.add(`selected-${selectingPlayer}`);
 
-    if (selectingPlayer === 1) {
+        if (selectingPlayer === 1) {
+            fighter1 = animal;
+            f1CurrentHp = animal.hp;
+            updateFighterUI(1, animal);
+        } else {
+            fighter2 = animal;
+            f2CurrentHp = animal.hp;
+            updateFighterUI(2, animal);
+        }
+    } else {
+        // Tournament mode: Only player 1 selects, player 2 is auto-generated
+        Array.from(DOM.rosterGrid.children).forEach(child => {
+            child.classList.remove('selected-1');
+        });
+        element.classList.add('selected-1');
+        
         fighter1 = animal;
         f1CurrentHp = animal.hp;
         updateFighterUI(1, animal);
-    } else {
-        fighter2 = animal;
-        f2CurrentHp = animal.hp;
-        updateFighterUI(2, animal);
+        
+        // Generate 25 opponents
+        generateTournamentOpponents();
+        
+        // Select first opponent
+        tournamentCurrentIndex = 0;
+        tournamentWins = 0;
+        tournamentLosses = 0;
+        fighter2 = tournamentOpponents[0];
+        f2CurrentHp = fighter2.hp;
+        updateFighterUI(2, fighter2);
+
+        // Reset progress UI
+        DOM.tourneyProgress.textContent = `0 / 25`;
+        DOM.tourneyWins.textContent = "0";
+        DOM.tourneyLosses.textContent = "0";
+        DOM.tourneyProgressBar.style.width = "0%";
     }
 
     checkReady();
+}
+
+function generateTournamentOpponents() {
+    tournamentOpponents = [];
+    for (let i = 0; i < 25; i++) {
+        const randomIndex = Math.floor(Math.random() * animals.length);
+        // Deep copy of animal stats so we don't modify the master template
+        tournamentOpponents.push({ ...animals[randomIndex] });
+    }
 }
 
 function updateFighterUI(playerNum, animal) {
@@ -202,6 +338,11 @@ function updateFighterUI(playerNum, animal) {
 function checkReady() {
     if (fighter1 && fighter2) {
         DOM.btnFight.disabled = false;
+        if (currentMode === 'tournament') {
+            DOM.btnFight.textContent = "TURNUVAYI BAŞLAT";
+        } else {
+            DOM.btnFight.textContent = "SAVAŞI BAŞLAT";
+        }
     }
 }
 
@@ -232,13 +373,94 @@ async function startFight() {
     addLog(`<b>SAVAŞ BAŞLIYOR!</b> ${fighter1.emoji} ${fighter1.name} VS ${fighter2.emoji} ${fighter2.name}`, true);
     await sleep(1000);
 
+    const winner = await runSingleBattle();
+    
+    addLog(`<h3>🏆 KAZANAN: ${winner.emoji} ${winner.name}! 🏆</h3>`, true);
+    
+    const winnerEmoji = winner === fighter1 ? DOM.f1Emoji : DOM.f2Emoji;
+    winnerEmoji.classList.add('shake');
+    
+    setTimeout(() => {
+        winnerEmoji.classList.remove('shake');
+        isFighting = false;
+        DOM.btnFight.disabled = false;
+        DOM.btnFight.textContent = "TEKRAR SAVAŞTIR";
+    }, 2000);
+}
+
+async function startTournament() {
+    if (!fighter1 || !fighter2 || isFighting) return;
+    
+    isFighting = true;
+    DOM.btnFight.disabled = true;
+    
+    tournamentWins = 0;
+    tournamentLosses = 0;
+    
+    for (let i = 0; i < 25; i++) {
+        tournamentCurrentIndex = i;
+        fighter2 = tournamentOpponents[i];
+        f2CurrentHp = fighter2.hp;
+        f1CurrentHp = fighter1.hp; // Reset player HP to full for each fight
+        
+        updateFighterUI(1, fighter1);
+        updateFighterUI(2, fighter2);
+        
+        DOM.logList.innerHTML = '';
+        addLog(`<b>[SAVAŞ ${i + 1} / 25]</b>`, true);
+        addLog(`Rakip: ${fighter2.emoji} ${fighter2.name} (Saldırı: ${fighter2.attack}, Savunma: ${fighter2.defense}, Hız: ${fighter2.speed}, HP: ${fighter2.hp})`);
+        await sleep(1500);
+        
+        const winner = await runSingleBattle();
+        
+        if (winner === fighter1) {
+            tournamentWins++;
+            addLog(`<h3>🎉 Savaş Kazandı! ${fighter1.name} galip geldi.</h3>`, true);
+        } else {
+            tournamentLosses++;
+            addLog(`<h3>😢 Savaş Kaybedildi! ${fighter2.name} galip geldi.</h3>`, true);
+        }
+        
+        // Update tournament progress UI
+        const progressPercent = ((i + 1) / 25) * 100;
+        DOM.tourneyProgress.textContent = `${i + 1} / 25`;
+        DOM.tourneyWins.textContent = tournamentWins;
+        DOM.tourneyLosses.textContent = tournamentLosses;
+        DOM.tourneyProgressBar.style.width = `${progressPercent}%`;
+        
+        await sleep(2000);
+    }
+    
+    // Tournament ended
+    DOM.logList.innerHTML = '';
+    addLog(`<h2>🏆 TURNUVA TAMAMLANDI! 🏆</h2>`, true);
+    addLog(`<b>Seçilen Hayvan:</b> ${fighter1.emoji} ${fighter1.name}`);
+    addLog(`<b>Toplam Galibiyet:</b> ${tournamentWins} / 25`);
+    addLog(`<b>Toplam Mağlubiyet:</b> ${tournamentLosses} / 25`);
+    
+    if (tournamentWins === 25) {
+        addLog(`<h3>👑 EFSANEVİ BİR ZAFER! 25 rakibin hepsini yendiniz! 👑</h3>`, true);
+    } else if (tournamentWins >= 18) {
+        addLog(`<h3>🔥 Harika bir performans! Turnuvayı başarıyla tamamladınız.</h3>`, true);
+    } else if (tournamentWins >= 10) {
+        addLog(`<h3>👍 Fena değil. Orta düzey bir başarı elde ettiniz.</h3>`);
+    } else {
+        addLog(`<h3>😅 Şansınız pek yaver gitmedi, tekrar deneyebilirsiniz!</h3>`);
+    }
+    
+    isFighting = false;
+    DOM.btnFight.disabled = false;
+    DOM.btnFight.textContent = "YENİ TURNUVA BAŞLAT";
+}
+
+async function runSingleBattle() {
     let turn = fighter1.speed >= fighter2.speed ? 1 : 2;
     if (fighter1.speed === fighter2.speed) {
         turn = Math.random() > 0.5 ? 1 : 2;
     }
 
     addLog(`Hızı yüksek olan ilk saldırır. İlk saldıran: ${turn === 1 ? fighter1.name : fighter2.name}`);
-    await sleep(1000);
+    await sleep(800);
 
     while (f1CurrentHp > 0 && f2CurrentHp > 0) {
         if (turn === 1) {
@@ -248,21 +470,10 @@ async function startFight() {
             await performAttack(fighter2, fighter1, 2, 1);
             turn = 1;
         }
-        await sleep(1200);
+        await sleep(900);
     }
 
-    const winner = f1CurrentHp > 0 ? fighter1 : fighter2;
-    addLog(`<h3>🏆 KAZANAN: ${winner.emoji} ${winner.name}! 🏆</h3>`, true);
-    
-    const winnerEmoji = f1CurrentHp > 0 ? DOM.f1Emoji : DOM.f2Emoji;
-    winnerEmoji.classList.add('shake');
-    
-    setTimeout(() => {
-        winnerEmoji.classList.remove('shake');
-        isFighting = false;
-        DOM.btnFight.disabled = false;
-        DOM.btnFight.textContent = "TEKRAR SAVAŞTIR";
-    }, 2000);
+    return f1CurrentHp > 0 ? fighter1 : fighter2;
 }
 
 async function performAttack(attacker, defender, attackerNum, defenderNum) {

@@ -63,6 +63,70 @@ header p {
     flex-wrap: wrap;
 }
 
+.mode-selector {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.mode-selector button {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+    box-shadow: none;
+    padding: 0.75rem 1.5rem;
+    font-size: 1rem;
+}
+
+.mode-selector button.active {
+    background: var(--accent);
+    color: white;
+    border-color: var(--accent);
+    box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
+}
+
+.tournament-status {
+    background: var(--card-bg);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--border);
+    border-radius: 1rem;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    text-align: center;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+}
+
+.tournament-status h3 {
+    margin-bottom: 0.5rem;
+    font-size: 1.4rem;
+}
+
+.tournament-status p {
+    color: var(--text-secondary);
+    margin-bottom: 1rem;
+}
+
+.tourney-progress-bar-container {
+    width: 100%;
+    height: 12px;
+    background: rgba(0, 0, 0, 0.5);
+    border-radius: 6px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+}
+
+.tourney-progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+    width: 0%;
+    transition: width 0.3s ease;
+}
+
+.hidden {
+    display: none !important;
+}
+
 .fighter-card {
     background: var(--card-bg);
     backdrop-filter: blur(12px);

@@ -16,6 +16,19 @@
         </header>
 
         <main>
+            <div class="mode-selector">
+                <button id="mode-classic-btn" class="active">Klasik 1v1 Savaş</button>
+                <button id="mode-tournament-btn">Turnuva Modu (25 Rakip)</button>
+            </div>
+
+            <div id="tournament-status" class="tournament-status hidden">
+                <h3>🏆 Turnuva İlerlemesi: <span id="tourney-progress">0 / 25</span> Savaş 🏆</h3>
+                <p>Galibiyet: <span id="tourney-wins">0</span> | Mağlubiyet: <span id="tourney-losses">0</span></p>
+                <div class="tourney-progress-bar-container">
+                    <div id="tourney-progress-bar" class="tourney-progress-bar"></div>
+                </div>
+            </div>
+
             <div class="arena">
                 <div class="fighter-card" id="fighter1-card">
                     <div class="fighter-emoji" id="fighter1-emoji">❓</div>
