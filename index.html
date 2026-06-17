@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hayvan Arenası (75 Hayvan)</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="background-overlay"></div>
+    <div class="container">
+        <header>
+            <h1>🦁 Hayvan Arenası 🦅</h1>
+            <p>75 farklı hayvan arasından seçim yapın ve efsanevi savaşları başlatın!</p>
+        </header>
+
+        <main>
+            <div class="arena">
+                <div class="fighter-card" id="fighter1-card">
+                    <div class="fighter-emoji" id="fighter1-emoji">❓</div>
+                    <h2 class="fighter-name" id="fighter1-name">Hayvan 1 Seçin</h2>
+                    <div class="health-bar-container">
+                        <div class="health-bar" id="fighter1-health"></div>
+                    </div>
+                    <div class="fighter-stats" id="fighter1-stats">
+                        <span>⚔️ Saldırı: ?</span>
+                        <span>🛡️ Savunma: ?</span>
+                        <span>⚡ Hız: ?</span>
+                    </div>
+                </div>
+
+                <div class="vs-section">
+                    <div class="vs-badge">VS</div>
+                    <button id="fight-btn" disabled>SAVAŞI BAŞLAT</button>
+                </div>
+
+                <div class="fighter-card" id="fighter2-card">
+                    <div class="fighter-emoji" id="fighter2-emoji">❓</div>
+                    <h2 class="fighter-name" id="fighter2-name">Hayvan 2 Seçin</h2>
+                    <div class="health-bar-container">
+                        <div class="health-bar" id="fighter2-health"></div>
+                    </div>
+                    <div class="fighter-stats" id="fighter2-stats">
+                        <span>⚔️ Saldırı: ?</span>
+                        <span>🛡️ Savunma: ?</span>
+                        <span>⚡ Hız: ?</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="battle-log" id="battle-log">
+                <h3>Savaş Kayıtları</h3>
+                <ul id="log-list">
+                    <li>Savaşın başlaması bekleniyor...</li>
+                </ul>
+            </div>
+
+            <div class="roster-section">
+                <h3>Hayvan Seçimi</h3>
+                <div class="roster-controls">
+                    <button class="active" id="select-p1-btn">Oyuncu 1 İçin Seç</button>
+                    <button id="select-p2-btn">Oyuncu 2 İçin Seç</button>
+                    <button id="random-btn">Rastgele Seçim</button>
+                </div>
+                <div class="roster-grid" id="roster-grid">
+                    <!-- Hayvanlar buraya JS ile yüklenecek -->
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
