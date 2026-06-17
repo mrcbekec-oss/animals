@@ -396,6 +396,7 @@ async function startTournament() {
     
     tournamentWins = 0;
     tournamentLosses = 0;
+    let eliminated = false;
     
     for (let i = 0; i < 25; i++) {
         tournamentCurrentIndex = i;
@@ -419,6 +420,7 @@ async function startTournament() {
         } else {
             tournamentLosses++;
             addLog(`<h3>😢 Savaş Kaybedildi! ${fighter2.name} galip geldi.</h3>`, true);
+            eliminated = true;
         }
         
         // Update tournament progress UI
@@ -429,23 +431,33 @@ async function startTournament() {
         DOM.tourneyProgressBar.style.width = `${progressPercent}%`;
         
         await sleep(2000);
+
+        if (eliminated) {
+            addLog(`<h3>⚠️ ELENDİNİZ! Turnuva sona erdi.</h3>`, true);
+            await sleep(1500);
+            break;
+        }
     }
     
     // Tournament ended
     DOM.logList.innerHTML = '';
-    addLog(`<h2>🏆 TURNUVA TAMAMLANDI! 🏆</h2>`, true);
+    if (eliminated) {
+        addLog(`<h2>💀 ELENDİNİZ! 💀</h2>`, true);
+    } else {
+        addLog(`<h2>🏆 TURNUVA TAMAMLANDI! 🏆</h2>`, true);
+    }
     addLog(`<b>Seçilen Hayvan:</b> ${fighter1.emoji} ${fighter1.name}`);
     addLog(`<b>Toplam Galibiyet:</b> ${tournamentWins} / 25`);
     addLog(`<b>Toplam Mağlubiyet:</b> ${tournamentLosses} / 25`);
     
     if (tournamentWins === 25) {
-        addLog(`<h3>👑 EFSANEVİ BİR ZAFER! 25 rakibin hepsini yendiniz! 👑</h3>`, true);
+        addLog(`<h3>👑 EFSANEVİ BİR ZAFER! 25 rakibin hepsini yendiniz ve Şampiyon oldunuz! 👑</h3>`, true);
     } else if (tournamentWins >= 18) {
-        addLog(`<h3>🔥 Harika bir performans! Turnuvayı başarıyla tamamladınız.</h3>`, true);
+        addLog(`<h3>🔥 Harika bir performans! ${tournamentWins}. raunda kadar yükseldiniz.</h3>`, true);
     } else if (tournamentWins >= 10) {
-        addLog(`<h3>👍 Fena değil. Orta düzey bir başarı elde ettiniz.</h3>`);
+        addLog(`<h3>👍 Fena değil. Orta düzey bir başarı elde ettiniz (${tournamentWins} Galibiyet).</h3>`);
     } else {
-        addLog(`<h3>😅 Şansınız pek yaver gitmedi, tekrar deneyebilirsiniz!</h3>`);
+        addLog(`<h3>😅 Erken elendiniz (${tournamentWins} Galibiyet), tekrar deneyebilirsiniz!</h3>`);
     }
     
     isFighting = false;
